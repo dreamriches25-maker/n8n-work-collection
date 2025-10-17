@@ -1,0 +1,886 @@
+{
+  "name": "Poem Shorts",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 中国古典诗词短视频项目\n### 方法思路：\n* 用DeepSeek生成中英文视频脚本\n* 再根据视频脚本为重要的分镜生成图片提示词\n* 把提示词（英文）保存到Google Sheet\n* 调用Google Flash 2.5 image (nano banana) API, 生成与提示词相应的图片\n* 将生成的图片保存到Google Drive\n* 将二进制图片转化为Base64 string格式，以备后续调用\n* 调用MoneyPrinterPro API，传入图片的base64 string参数，生成视频\n\n### 技术节点：\n* __Form Submission__ node to take user input\n* __AI Agent__ node to call DeepSeek API for generating video script\n* __Google Docs__ node Save output to Google Docs\n* __AI Agent__ node to read video script to be able to generate image prompts for key frames\n* __loop__ node to loop through all the output from the previous node\n* __Gemini__ node to generate an image based on prompt\n* __Google Drive__ node to create a folder to allocate image files\n* __Google Drive__ node to save image file to the folder with the naming convention\n* __Wait__ node for waiting 10s\n* __loop__ node: loop through Google Drive folder\n* __File conversion__ node: convert image binary file to base64 string\n* __Google Sheet__ node: save base64 string to the sheet\n* __AI Agent__ node to call MoneyPrinter Pro API and provide input parameters",
+        "height": 608,
+        "width": 624
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1232,
+        -992
+      ],
+      "typeVersion": 1,
+      "id": "9856eff9-c05f-4eb4-9368-9a7c48503206",
+      "name": "Sticky Note",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "formTitle": "古诗词题目",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "请输入诗词标题"
+            },
+            {
+              "fieldLabel": "作者"
+            },
+            {
+              "fieldLabel": "类型",
+              "placeholder": "唐诗"
+            },
+            {
+              "fieldLabel": "文件夹名字"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -640,
+        -304
+      ],
+      "id": "544dc38e-ff98-44c1-b919-29fc3ebba67e",
+      "name": "On form submission",
+      "webhookId": "6fe792f0-317a-4f7c-b40b-097156ecc168"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -128
+      ],
+      "id": "f083f5d5-aaf5-4d4b-a4b4-54311389e1ef",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -112
+      ],
+      "id": "c35865b4-2489-43ca-ac2a-72b141e15664",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash-preview-image-generation",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash-preview-image-generation"
+        },
+        "prompt": "={{ $json.englishPrompts }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -288
+      ],
+      "id": "937fafa7-b6df-4bd8-8d0a-d946c2c0c2ee",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PBy2tKv205FgVvzE",
+          "name": "Google Gemini(PaLM) Api-talesteller"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.sequence }}-{{ $json.poemName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://drive.google.com/drive/folders/1f2kYljsf2gePM0YFWcwCfWuBbeQUxD2v",
+          "__regex": "https:\\/\\/drive\\.google\\.com(?:\\/.*|)\\/folders\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        -512
+      ],
+      "id": "2399c408-4554-4903-9e57-796a42b7b087",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dv9cv6h0TrG0ry0Y",
+          "name": "Google Drive-talesteller"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "englishPrompts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -304
+      ],
+      "id": "966bade0-31fd-400e-94b8-d0086377a733",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1904,
+        -304
+      ],
+      "id": "c9534004-9ee0-4c0b-9870-eec05307fdc0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3152,
+        -288
+      ],
+      "id": "446305bc-1d97-45a0-a794-0e4b0f9e1337",
+      "name": "Wait",
+      "webhookId": "2daf14c5-2a71-4caf-97b4-1def0230a435"
+    },
+    {
+      "parameters": {
+        "content": "## Image Generation\n* User provide poem\n* DeepSeek V3 generate"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1216,
+        -240
+      ],
+      "typeVersion": 1,
+      "id": "5961207e-22ae-4826-aa6b-bab57e9cfe85",
+      "name": "Sticky Note1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Video Generation Workflow\n* Form submission node to upload multiple images \n* SPlit node to separate images to single item\n* File conversion to convert image binary file to base64 string\n* Combine node to put all strings together as one item\n* Call MoneyPrinterPro API",
+        "height": 256,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1296,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "56cf9003-d95e-4ffa-adaf-7fdf4539b2e3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "33e3dfb2-71df-4186-8372-75c18eba412c",
+              "leftValue": "={{ $json.data.progress}}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2336,
+        352
+      ],
+      "id": "7449e1b9-5567-4a17-a760-bf45c8482d3f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/api/v1/videos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_subject\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}\",\n  \"video_script\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}，{{ $node['On form submission'].json['作者'] }}，{{$node['PoemContent'].json['output']}}\",\n  \"video_terms\": \"\",\n  \"video_aspect\": \"9:16\",\n  \"video_concat_mode\": \"sequential\",\n  \"video_transition_mode\": \"FadeIn\",\n  \"video_clip_duration\": 3,\n  \"video_count\": 1,\n  \"video_source\": \"local\",\n  \"video_materials\":{{ $json.imageListString }},\n  \"video_language\": \"zh\",\n  \"voice_name\": \"zh-CN-YunyangNeural-Male\",\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 0.6,\n  \"bgm_type\": \"random\",\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.2,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"STHeitiMedium.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        352
+      ],
+      "id": "31ef44be-4ad7-4011-953c-b07ed46bf454",
+      "name": "Call MoneyPrinterTurbo API "
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        352
+      ],
+      "id": "43442c1b-3304-4897-81b3-09df3db7630d",
+      "name": "Pause 10 Seconds",
+      "webhookId": "ddf55a55-a39e-41b3-9148-669b889ac3e6"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8080/api/v1/tasks/{{ $json.data.task_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1856,
+        352
+      ],
+      "id": "54049ba1-fc95-4f57-8efb-2e7c7a632b5f",
+      "name": "Check Job Status and Progress"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.videos[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2656,
+        336
+      ],
+      "id": "385baad9-561b-4f0a-9bcc-082116a1ca5c",
+      "name": "Download the Video"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "options": {
+          "systemMessage": "帮我根据视频分镜内容为每个重要的分镜生成图片提示词，提示词要保持人物和场景的统一性和一致性，提示词要中英文都有，可以用这些提示词生成重要分镜的图片，图片是中国古风卡通风格。输出格式为表格，第一列为分镜描述，第二列为中文图片提示词，第三列为英文AI绘画提示词。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        -304
+      ],
+      "id": "155f4add-2a3b-4da8-a847-c8115f2dba71",
+      "name": "AI Generate Images Prompts based on Video Clips"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=我想将{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }}这首{{ $node['On form submission'].json['类型'] }}制作成短视频，根据词的内容帮我生成分镜脚本，分镜要求精辟简练，只要表达诗词内容就可以了，不要随意发挥诗词没有表达的场景，但也要准确，充分展示出诗词的字面全部内容和意思，",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        -304
+      ],
+      "id": "a6b1e868-a3e1-4aa3-aa37-c11e5d6a0cbe",
+      "name": "AI Generate Video Clips Prompt"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc",
+          "mode": "list",
+          "cachedResultName": "video-image-prompt",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "video-clip",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        -528
+      ],
+      "id": "5cb304d9-b0f2-49d7-8f83-64e3f7178cdc",
+      "name": "Save Video Prompt to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6Pz0OCFk8ypUWAhK",
+          "name": "Google Sheet-talesteller"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc",
+          "mode": "list",
+          "cachedResultName": "video-image-prompt",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 414023795,
+          "mode": "list",
+          "cachedResultName": "image",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kcio56b8iAtlx9SirBJyt0Iru_IxdFx9fYqpiramOQc/edit#gid=414023795"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -512
+      ],
+      "id": "ba9b8dde-afb5-4dc4-ae81-a9c92d94eced",
+      "name": "Save Image Prompt to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6Pz0OCFk8ypUWAhK",
+          "name": "Google Sheet-talesteller"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 AI Agent1 的输出文本\nconst text = $json[\"output\"];\n\n// 按行分割\nconst lines = text.split('\\n');\n\n// 提取所有包含 \"Ancient\" 的表格行\nconst englishPrompts = [];\n\nfor (const line of lines) {\n  // 跳过表头、分隔线和空行\n  if (!line.includes('|') || \n      line.includes('---') || \n      line.includes('分镜描述') ||\n      line.includes('Scene Description')) {\n    continue;\n  }\n  \n  // 检查是否包含 \"Ancient\"（英文提示词的标志）\n  if (line.toLowerCase().includes('ancient')) {\n    const cols = line.split('|').map(c => c.trim());\n    \n    // 找到包含 \"Ancient\" 的列（通常是最后一列）\n    for (let i = cols.length - 1; i >= 0; i--) {\n      if (cols[i].toLowerCase().includes('ancient')) {\n        englishPrompts.push(cols[i]);\n        break;\n      }\n    }\n  }\n}\n\n// 输出\nreturn [{ englishPrompts }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -304
+      ],
+      "id": "dc039de0-c8fc-4649-ad93-bdb60ef01ce9",
+      "name": "Extract Prompt from AI Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取当前项\nconst currentItem = $input.item;\n\n// 从 Loop Over Items 节点获取当前批次信息\nconst loopContext = $node['Loop Over Items'].context;\n\n// 计算当前序号（已处理的项数 + 1）\nconst sequence = loopContext.currentRunIndex + 1;\n\n// 获取诗词名称（从表单输入）\nlet poemName = '';\ntry {\n  poemName = $node['On form submission'].json['请输入诗词标题'];\n  \n  // 清理文件名中的非法字符\n  if (poemName) {\n    poemName = poemName.replace(/[\\s\\/\\\\:*?\"<>|]/g, '-');\n  } else {\n    throw new Error('诗词标题为空');\n  }\n} catch (error) {\n  console.error('错误：无法获取诗词名称', error);\n  throw new Error('请确保已输入诗词标题');\n}\n\n// 获取文件夹名字\nlet poemDir = '';\ntry {\n  poemDir = $node['On form submission'].json['文件夹名字'];\n  \n  if (!poemDir) {\n    throw new Error('文件夹名字为空');\n  }\n} catch (error) {\n  console.error('错误：无法获取文件夹名字', error);\n  throw new Error('请确保已输入文件夹名字');\n}\n\n// 添加数据\ncurrentItem.json.sequence = sequence;\ncurrentItem.json.poemName = poemName;\ncurrentItem.json.poemDir = poemDir;\n\nreturn currentItem;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        -288
+      ],
+      "id": "a5f9ae9c-f35e-457e-8d89-db7b72cb62bb",
+      "name": "Create Sequence Number for File Name"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/mnt/{{$node['On form submission'].json['文件夹名字']}}/{{ $json.sequence }}-{{ $json.poemName }}.{{ $json.fileExtension }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        -288
+      ],
+      "id": "e34ea479-2fc5-439b-b58e-f0218f61b99a",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p \"/mnt/{{ $('On form submission').item.json['文件夹名字'] }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        -304
+      ],
+      "id": "e25dba8e-0cb5-457b-bc52-7789f480af18",
+      "name": "Create Subfolder for Images"
+    },
+    {
+      "parameters": {
+        "command": "=find /mnt/{{ $json.poemDir }} -maxdepth 1 -type f \\( -iname \"*.png\" -o -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.gif\" -o -iname \"*.webp\" \\) | sort -V"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        -32
+      ],
+      "id": "95f0277d-dd63-4055-90f1-fb26ebede596",
+      "name": "Check All Resource Files"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取上一个节点的输出\nconst stdout = $input.first().json.stdout;\n\n// 获取文件夹名字\nconst folderName = $input.first().json.poemDir || $input.first().json['文件夹名字'];\n\n// 检查是否有输出\nif (!stdout || stdout.trim() === '') {\n  throw new Error(`在 /mnt/${folderName} 中没有找到图片文件`);\n}\n\n// 分割文件路径并过滤空行\nconst filePaths = stdout\n  .trim()\n  .split('\\n')\n  .filter(path => path && path.trim());\n\n// 检查是否找到文件\nif (filePaths.length === 0) {\n  throw new Error(`没有找到任何图片文件`);\n}\n\n// 构建图片对象数组\n// 将 /mnt/ 路径转换为 /app/n8n_shared/ 路径\nconst imageArray = filePaths.map(filePath => {\n  // 替换路径: /mnt/ -> /app/n8n_shared/\n  const apiPath = filePath.trim().replace('/mnt/', '/app/n8n_shared/');\n  \n  return {\n    provider: \"local\",\n    url: apiPath\n    // 移除了 duration 字段\n  };\n});\n\n// 转换为 JSON 字符串 (格式化输出,便于调试)\nconst imageListString = JSON.stringify(imageArray, null, 2);\n\n// 返回结果\nreturn [{\n  json: {\n    images: imageArray,              // 数组格式,用于 API 调用\n    imageListString: imageListString, // 字符串格式,用于查看\n    totalImages: imageArray.length,   // 图片总数\n    folderName: folderName            // 文件夹名字\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        -32
+      ],
+      "id": "2b123f44-92d9-4f59-b218-3d88ced39264",
+      "name": "Create Request Body"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        -80
+      ],
+      "id": "4f960aa8-4ca6-4ec9-af7a-6e9d8601a0da",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=输出{{ $json['作者'] }}的{{ $json['类型'] }}{{ $json['请输入诗词标题'] }}的原文内容，只要原文就好，不需要输出标题，不要换行，只输出一个字符串，但要有标点符号",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -384,
+        -304
+      ],
+      "id": "d9e3a47f-1488-4842-a820-7ff20bb2d34e",
+      "name": "PoemContent"
+    }
+  ],
+  "pinData": {
+    "Save Video Prompt to Sheet": [
+      {
+        "json": {
+          "output": "《早发白帝城》分镜脚本（精炼准确版）\n\n---\n**镜头1**（0-3秒）  \n画面：朝霞染红的云层间露出白帝城轮廓  \n字幕：朝辞白帝彩云间  \n\n**镜头2**（3-6秒）  \n画面：轻舟顺江而下，两岸山峦快速后退  \n字幕：千里江陵一日还  \n\n**镜头3**（6-9秒）  \n画面：船头视角，两岸猿群在陡峭山崖上啼叫  \n字幕：两岸猿声啼不住  \n\n**镜头4**（9-12秒）  \n画面：小舟穿出峡谷，前方江面豁然开阔  \n字幕：轻舟已过万重山  \n\n---\n【执行要点】  \n1. 全程采用第一人称航拍视角，强化「轻舟疾行」的动感  \n2. 色调从晨光金黄渐变为清朗碧蓝，对应时间推移  \n3. 猿声采用空灵混响音效，不出现具体猿猴特写  \n4. 最终镜头以江面开阔画面收尾，不添加任何现代元素  \n\n时长建议：12秒匀速镜头+3秒黑场字幕，总15秒"
+        }
+      }
+    ],
+    "Save Image Prompt to Sheet": [
+      {
+        "json": {
+          "output": "以下是根据您的《早发白帝城》分镜脚本生成的AI绘画提示词表格。我严格遵循了分镜的描述、执行要点（如第一人称航拍视角、色调变化、中国古风卡通风格）以及保持人物（轻舟和场景元素）和场景（白帝城、江陵、峡谷等）的统一性和一致性。提示词为中英文双语，英文部分使用逗号分隔的关键词格式，适合AI绘画工具生成图像。\n\n表格格式如下：\n- **第一列：分镜描述**（基于您提供的镜头内容，简明摘要）。\n- **第二列：中文图片提示词**（包含场景、风格、视角、色调等元素，确保一致）。\n- **第三列：英文AI绘画提示词**（翻译自中文，使用关键词格式，适合AI生成）。\n\n| 分镜描述 | 中文图片提示词 | 英文 AI Painting Prompt |\n| :--- | :--- | :--- |\n| 镜头1: 朝霞染红的云层间露出白帝城轮廓，字幕：朝辞白帝彩云间 | 中国古风卡通风格，第一人称航拍视角，朝霞染红的云层，白帝城轮廓隐约可见，金色和橙色调，天空渐变色，无人物，强调动态云彩和古代建筑，简约动画效果，适合清晨场景。 | Ancient Chinese cartoon style, first-person aerial view, rosy dawn clouds, silhouette of Baidi City, golden and orange color palette, gradient sky, no characters, dynamic clouds and ancient architecture, simple animation effect, morning scene. |\n| 镜头2: 轻舟顺江而下，两岸山峦快速后退，字幕：千里江陵一日还 | 中国古风卡通风格，第一人称航拍视角，轻舟顺江快速下行，两岸山峦向后移动，碧蓝色江水，山色青翠，色调从金黄渐变到清朗碧蓝，强调运动感和速度，无人物特写，江面波纹动态。 | Ancient Chinese cartoon style, first-person aerial view, light boat swiftly descending river, mountains receding on both banks, turquoise blue river water, verdant mountain colors, color transition from golden to clear blue, sense of motion and speed, no character close-ups, dynamic water ripples. |\n| 镜头3: 船头视角，两岸猿群在陡峭山崖上啼叫（无猿猴特写），字幕：两岸猿声啼不住 | 中国古风卡通风格，第一人称船头视角，陡峭山崖上猿群隐约啼叫（无特写，仅轮廓或声音暗示），碧蓝色调，山崖绿意，空灵氛围，强调听觉元素通过视觉暗示，轻舟在前景，动态水流。 | Ancient Chinese cartoon style, first-person boat perspective, steep cliffs with silhouettes of monkeys crying (no close-ups, only implied through shapes or sound), turquoise blue color palette, green cliffs, ethereal atmosphere, emphasis on auditory elements through visual hints, light boat in foreground, dynamic water flow. |\n| 镜头4: 小舟穿出峡谷，前方江面豁然开阔，字幕：轻舟已过万重山 | 中国古风卡通风格，第一人称航拍视角，小舟 emerging from峡谷，江面 suddenly开阔，碧蓝色调，广阔水域，远山轮廓，无现代元素，强调豁然开朗的感觉，色调清朗，动态结束感。 | Ancient Chinese cartoon style, first-person aerial view, small boat emerging from gorge, river suddenly widening, turquoise blue color palette, vast water expanse, distant mountain silhouettes, no modern elements, emphasis on sudden openness, clear and bright tones, dynamic conclusion. |\n\n### 注意事项：\n- **统一性和一致性**：所有提示词保持中国古风卡通风格，色调从镜头1的金黄渐变到镜头4的碧蓝（符合执行要点2），视角均为第一人称航拍（执行要点1），避免人物特写（执行要点3），并确保无现代元素（执行要点4）。\n- **提示词优化**：中文提示词简明扼要，英文提示词使用逗号分隔的关键词，便于AI工具解析；例如，在镜头3中，我使用了“silhouettes of monkeys crying (no close-ups)”来避免特写，同时暗示声音元素。\n- **生成建议**：使用这些提示词时，可以调整AI绘画工具的设置（如稳定扩散或DALL-E）来匹配分辨率（建议16:9比例，以适合视频分镜），并添加“cartoon, ancient China, aerial view”等通用标签以增强一致性。\n\n如果您需要进一步调整或更多分镜，请随时告知！"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "PoemContent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Generate Video Clips Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Generate Images Prompts based on Video Clips",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Create Sequence Number for File Name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Check All Resource Files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Download the Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pause 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call MoneyPrinterTurbo API ": {
+      "main": [
+        [
+          {
+            "node": "Pause 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause 10 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Check Job Status and Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Job Status and Progress": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download the Video": {
+      "main": [
+        []
+      ]
+    },
+    "AI Generate Images Prompts based on Video Clips": {
+      "main": [
+        [
+          {
+            "node": "Extract Prompt from AI Output",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Image Prompt to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Generate Video Clips Prompt": {
+      "main": [
+        [
+          {
+            "node": "Save Video Prompt to Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Generate Images Prompts based on Video Clips",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Video Prompt to Sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Extract Prompt from AI Output": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sequence Number for File Name": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Subfolder for Images": {
+      "main": [
+        [
+          {
+            "node": "AI Generate Video Clips Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check All Resource Files": {
+      "main": [
+        [
+          {
+            "node": "Create Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Request Body": {
+      "main": [
+        [
+          {
+            "node": "Call MoneyPrinterTurbo API ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PoemContent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PoemContent": {
+      "main": [
+        [
+          {
+            "node": "Create Subfolder for Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6157960c-c632-4491-b1bd-31b203b7a41b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
+  },
+  "id": "6kWrUAzuZvEuP6zJ",
+  "tags": [
+    {
+      "createdAt": "2025-09-18T18:56:00.228Z",
+      "updatedAt": "2025-09-18T18:56:00.228Z",
+      "id": "EmiW5IiFDS9qsL3Y",
+      "name": "Application Tool"
+    }
+  ]
+}
