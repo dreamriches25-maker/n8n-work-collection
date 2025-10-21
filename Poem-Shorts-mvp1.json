@@ -9,8 +9,8 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1232,
-        -992
+        -992,
+        -1376
       ],
       "typeVersion": 1,
       "id": "9856eff9-c05f-4eb4-9368-9a7c48503206",
@@ -42,52 +42,12 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.3,
       "position": [
-        -640,
+        -704,
         -304
       ],
       "id": "544dc38e-ff98-44c1-b919-29fc3ebba67e",
       "name": "On form submission",
       "webhookId": "6fe792f0-317a-4f7c-b40b-097156ecc168"
-    },
-    {
-      "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        224,
-        -128
-      ],
-      "id": "f083f5d5-aaf5-4d4b-a4b4-54311389e1ef",
-      "name": "OpenRouter Chat Model",
-      "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        736,
-        -112
-      ],
-      "id": "c35865b4-2489-43ca-ac2a-72b141e15664",
-      "name": "OpenRouter Chat Model1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
-        }
-      }
     },
     {
       "parameters": {
@@ -192,12 +152,15 @@
     },
     {
       "parameters": {
-        "content": "## Image Generation\n* User provide poem\n* DeepSeek V3 generate"
+        "content": "## Image Generation\nThis part of workflow is aiming to generate image resources for short-form video\n* User provide poem title, autor, type, folder name\n* DeepSeek V3.1 generate video clip description\n* DeepSeek V3.1 generate image prompt based on video clip\n* Call Google Gemini 2.0 API to generate images based on image prompt",
+        "height": 272,
+        "width": 4736,
+        "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1216,
-        -240
+        -1264,
+        -336
       ],
       "typeVersion": 1,
       "id": "5961207e-22ae-4826-aa6b-bab57e9cfe85",
@@ -207,13 +170,14 @@
     {
       "parameters": {
         "content": "## Video Generation Workflow\n* Form submission node to upload multiple images \n* SPlit node to separate images to single item\n* File conversion to convert image binary file to base64 string\n* Combine node to put all strings together as one item\n* Call MoneyPrinterPro API",
-        "height": 256,
-        "width": 464
+        "height": 448,
+        "width": 4752,
+        "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1296,
-        256
+        -1264,
+        192
       ],
       "typeVersion": 1,
       "id": "56cf9003-d95e-4ffa-adaf-7fdf4539b2e3",
@@ -338,7 +302,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        304,
+        384,
         -304
       ],
       "id": "a6b1e868-a3e1-4aa3-aa37-c11e5d6a0cbe",
@@ -504,7 +468,7 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        -16,
+        -176,
         -304
       ],
       "id": "e25dba8e-0cb5-457b-bc52-7789f480af18",
@@ -517,7 +481,7 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        1728,
+        1232,
         -32
       ],
       "id": "95f0277d-dd63-4055-90f1-fb26ebede596",
@@ -530,31 +494,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2064,
+        1600,
         -32
       ],
       "id": "2b123f44-92d9-4f59-b218-3d88ced39264",
       "name": "Create Request Body"
-    },
-    {
-      "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        -448,
-        -80
-      ],
-      "id": "4f960aa8-4ca6-4ec9-af7a-6e9d8601a0da",
-      "name": "OpenRouter Chat Model2",
-      "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
-        }
-      }
     },
     {
       "parameters": {
@@ -565,11 +509,148 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -384,
+        -512,
         -304
       ],
       "id": "d9e3a47f-1488-4842-a820-7ff20bb2d34e",
       "name": "PoemContent"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/mnt/{{$node['On form submission'].json['文件夹名字']}}/{{ $node['On form submission'].json['请输入诗词标题'] }}.mp4",
+        "dataPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3136,
+        224
+      ],
+      "id": "f57a18cd-4982-46dd-8bda-70c1b3ca0e48",
+      "name": "Write Video to Local Directory"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{$node['On form submission'].json['请输入诗词标题'] }} - 诗意东方-Poetic East·AI Vision",
+        "regionCode": "CA",
+        "categoryId": "24",
+        "options": {
+          "description": "={{ $node['Generate Video Description'].json.output }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        448
+      ],
+      "id": "b7116103-2829-4354-a259-e42bbb2506ba",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "lRwCUwWMdvNh7nuF",
+          "name": "YouTube account - talesteller"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "f083f5d5-aaf5-4d4b-a4b4-54311389e1ef",
+      "name": "OpenRouter DeepSeek V3.1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=简要介绍一下这首{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }}，作为YouTube短视频的description描述",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -304
+      ],
+      "id": "aaa8c599-3e37-425a-b382-dc656519865f",
+      "name": "Generate Video Description"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        -112
+      ],
+      "id": "4f960aa8-4ca6-4ec9-af7a-6e9d8601a0da",
+      "name": "OpenRouter DeepSeek V3.3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        704,
+        -96
+      ],
+      "id": "c35865b4-2489-43ca-ac2a-72b141e15664",
+      "name": "OpenRouter DeepSeek V3.4",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -96
+      ],
+      "id": "462092fb-3a52-4240-a982-07a6c7d49feb",
+      "name": "OpenRouter DeepSeek V3.",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
     }
   ],
   "pinData": {
@@ -595,28 +676,6 @@
           {
             "node": "PoemContent",
             "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Generate Video Clips Prompt",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Generate Images Prompts based on Video Clips",
-            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -731,7 +790,18 @@
     },
     "Download the Video": {
       "main": [
-        []
+        [
+          {
+            "node": "Write Video to Local Directory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "AI Generate Images Prompts based on Video Clips": {
@@ -813,7 +883,7 @@
       "main": [
         [
           {
-            "node": "AI Generate Video Clips Prompt",
+            "node": "Generate Video Description",
             "type": "main",
             "index": 0
           }
@@ -842,17 +912,6 @@
         ]
       ]
     },
-    "OpenRouter Chat Model2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "PoemContent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "PoemContent": {
       "main": [
         [
@@ -863,13 +922,73 @@
           }
         ]
       ]
+    },
+    "Write Video to Local Directory": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter DeepSeek V3.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Generate Video Clips Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Video Description": {
+      "main": [
+        [
+          {
+            "node": "AI Generate Video Clips Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter DeepSeek V3.3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PoemContent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter DeepSeek V3.4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Generate Images Prompts based on Video Clips",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter DeepSeek V3.": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Video Description",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "6157960c-c632-4491-b1bd-31b203b7a41b",
+  "versionId": "f5d672bf-c7d8-404a-a743-b7b886bb2353",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
