@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## 中国古典诗词短视频项目\n### 方法思路：\n* 用DeepSeek生成中英文视频脚本\n* 再根据视频脚本为重要的分镜生成图片提示词\n* 把提示词（英文）保存到Google Sheet\n* 调用Google Flash 2.5 image (nano banana) API, 生成与提示词相应的图片\n* 将生成的图片保存到Google Drive\n* 将二进制图片转化为Base64 string格式，以备后续调用\n* 调用MoneyPrinterPro API，传入图片的base64 string参数，生成视频\n\n### 技术节点：\n* __Form Submission__ node to take user input\n* __AI Agent__ node to call DeepSeek API for generating video script\n* __Google Docs__ node Save output to Google Docs\n* __AI Agent__ node to read video script to be able to generate image prompts for key frames\n* __loop__ node to loop through all the output from the previous node\n* __Gemini__ node to generate an image based on prompt\n* __Google Drive__ node to create a folder to allocate image files\n* __Google Drive__ node to save image file to the folder with the naming convention\n* __Wait__ node for waiting 10s\n* __loop__ node: loop through Google Drive folder\n* __File conversion__ node: convert image binary file to base64 string\n* __Google Sheet__ node: save base64 string to the sheet\n* __AI Agent__ node to call MoneyPrinter Pro API and provide input parameters",
+        "content": "## 中国古典诗词短视频项目\n### 方法思路：\n* 用DeepSeek生成中英文视频脚本\n* 再根据视频脚本为重要的分镜生成图片提示词\n* 把提示词（英文）保存到Google Sheet\n* 调用Google Flash 2.0 image API, 生成与提示词相应的图片\n* 将生成的图片保存到do\n* 将二进制图片转化为Base64 string格式，以备后续调用\n* 调用MoneyPrinterPro API，传入图片的base64 string参数，生成视频\n\n### 技术节点：\n* __Form Submission__ node to take user input\n* __AI Agent__ node to call DeepSeek API for generating video script\n* __Google Docs__ node Save output to Google Docs\n* __AI Agent__ node to read video script to be able to generate image prompts for key frames\n* __loop__ node to loop through all the output from the previous node\n* __Gemini__ node to generate an image based on prompt\n* __Google Drive__ node to create a folder to allocate image files\n* __Google Drive__ node to save image file to the folder with the naming convention\n* __Wait__ node for waiting 10s\n* __loop__ node: loop through Google Drive folder\n* __File conversion__ node: convert image binary file to base64 string\n* __Google Sheet__ node: save base64 string to the sheet\n* __AI Agent__ node to call MoneyPrinter Pro API and provide cke",
         "height": 608,
         "width": 624
       },
@@ -34,6 +34,9 @@
             },
             {
               "fieldLabel": "文件夹名字"
+            },
+            {
+              "fieldLabel": "首句诗词内容"
             }
           ]
         },
@@ -176,8 +179,8 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1264,
-        192
+        -1232,
+        208
       ],
       "typeVersion": 1,
       "id": "56cf9003-d95e-4ffa-adaf-7fdf4539b2e3",
@@ -222,7 +225,7 @@
         "url": "http://host.docker.internal:8080/api/v1/videos",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"video_subject\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}\",\n  \"video_script\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}，{{ $node['On form submission'].json['作者'] }}，{{$node['PoemContent'].json['output']}}\",\n  \"video_terms\": \"\",\n  \"video_aspect\": \"9:16\",\n  \"video_concat_mode\": \"sequential\",\n  \"video_transition_mode\": \"FadeIn\",\n  \"video_clip_duration\": 3,\n  \"video_count\": 1,\n  \"video_source\": \"local\",\n  \"video_materials\":{{ $json.imageListString }},\n  \"video_language\": \"zh\",\n  \"voice_name\": \"zh-CN-YunyangNeural-Male\",\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 0.6,\n  \"bgm_type\": \"random\",\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.2,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"STHeitiMedium.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
+        "jsonBody": "={\n  \"video_subject\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}\",\n  \"video_script\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}，{{ $node['On form submission'].json['作者'] }}，{{$node['PoemContent'].json['output']}}\",\n  \"video_terms\": \"\",\n  \"video_aspect\": \"9:16\",\n  \"video_concat_mode\": \"sequential\",\n  \"video_transition_mode\": \"FadeIn\",\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": \"local\",\n  \"video_materials\":{{ $json.imageListString }},\n  \"video_language\": \"zh\",\n  \"voice_name\": \"zh-CN-YunyangNeural-Male\",\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 0.6,\n  \"bgm_type\": \"random\",\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.2,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"STHeitiMedium.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -281,7 +284,7 @@
         "promptType": "define",
         "text": "={{ $json.output }}",
         "options": {
-          "systemMessage": "帮我根据视频分镜内容为每个重要的分镜生成图片提示词，提示词要保持人物和场景的统一性和一致性，提示词要中英文都有，可以用这些提示词生成重要分镜的图片，图片是中国古风卡通风格。输出格式为表格，第一列为分镜描述，第二列为中文图片提示词，第三列为英文AI绘画提示词。"
+          "systemMessage": "=帮我根据视频分镜内容为每个重要的分镜生成图片提示词，提示词要保持人物和场景的统一性和一致性，提示词要中英文都有，可以用这些提示词生成重要分镜的图片，图片是中国古风卡通风格。输出格式为表格，第一列为分镜描述，第二列为中文图片提示词，第三列为英文AI绘画提示词。提示词要有图片尺寸比例要求：宽度 (Width): 1024，高度 (Height): 1024，长宽比 (Aspect Ratio): 1:1，demension 1024*1024"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -296,7 +299,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=我想将{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }}这首{{ $node['On form submission'].json['类型'] }}制作成短视频，根据词的内容帮我生成分镜脚本，分镜要求精辟简练，只要表达诗词内容就可以了，不要随意发挥诗词没有表达的场景，但也要准确，充分展示出诗词的字面全部内容和意思，",
+        "text": "=我想将{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }}这首{{ $node['On form submission'].json['类型'] }}({{ $node['On form submission'].json['首句诗词内容'] }})制作成短视频，根据词的内容帮我生成分镜脚本，分镜要求精辟简练，只要表达诗词内容就可以了，不要随意发挥诗词没有表达的场景，但也要准确，充分展示出诗词的字面全部内容和意思.",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -503,7 +506,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=输出{{ $json['作者'] }}的{{ $json['类型'] }}{{ $json['请输入诗词标题'] }}的原文内容，只要原文就好，不需要输出标题，不要换行，只输出一个字符串，但要有标点符号",
+        "text": "=输出{{ $json['作者'] }}的{{ $json['类型'] }}{{ $json['请输入诗词标题'] }} （{{ $json['首句诗词内容'] }}）的原文内容，只要原文就好，不需要输出标题，不要换行，只输出一个字符串，但要有标点符号",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -580,7 +583,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=简要介绍一下这首{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }}，作为YouTube短视频的description描述",
+        "text": "=简要介绍一下这首{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['请输入诗词标题'] }} ({{ $node['On form submission'].json['首句诗词内容'] }})，作为YouTube短视频的description描述",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -988,7 +991,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "f5d672bf-c7d8-404a-a743-b7b886bb2353",
+  "versionId": "70f19c96-c0e4-4474-9b85-87c48b4e717c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
