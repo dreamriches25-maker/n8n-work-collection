@@ -1,5 +1,5 @@
 {
-  "name": "Poem Shorts",
+  "name": "Peom Shorts",
   "nodes": [
     {
       "parameters": {
@@ -57,9 +57,9 @@
         "resource": "image",
         "modelId": {
           "__rl": true,
-          "value": "models/gemini-2.0-flash-preview-image-generation",
+          "value": "models/gemini-2.5-flash-image",
           "mode": "list",
-          "cachedResultName": "models/gemini-2.0-flash-preview-image-generation"
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
         },
         "prompt": "={{ $json.englishPrompts }}",
         "options": {}
@@ -74,8 +74,8 @@
       "name": "Generate an image",
       "credentials": {
         "googlePalmApi": {
-          "id": "PBy2tKv205FgVvzE",
-          "name": "Google Gemini(PaLM) Api-talesteller"
+          "id": "sG5ngrLn79l6Wl7x",
+          "name": "Google Gemini(PaLM) Api Herman"
         }
       }
     },
@@ -173,13 +173,13 @@
     {
       "parameters": {
         "content": "## Video Generation Workflow\n* Form submission node to upload multiple images \n* SPlit node to separate images to single item\n* File conversion to convert image binary file to base64 string\n* Combine node to put all strings together as one item\n* Call MoneyPrinterPro API",
-        "height": 448,
+        "height": 464,
         "width": 4752,
         "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -1232,
+        -1280,
         208
       ],
       "typeVersion": 1,
@@ -213,7 +213,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2336,
+        2544,
         352
       ],
       "id": "7449e1b9-5567-4a17-a760-bf45c8482d3f",
@@ -244,7 +244,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1344,
+        1552,
         352
       ],
       "id": "43442c1b-3304-4897-81b3-09df3db7630d",
@@ -259,7 +259,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1856,
+        2064,
         352
       ],
       "id": "54049ba1-fc95-4f57-8efb-2e7c7a632b5f",
@@ -273,7 +273,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2656,
+        2864,
         336
       ],
       "id": "385baad9-561b-4f0a-9bcc-082116a1ca5c",
@@ -284,7 +284,7 @@
         "promptType": "define",
         "text": "={{ $json.output }}",
         "options": {
-          "systemMessage": "=帮我根据视频分镜内容为每个重要的分镜生成图片提示词，提示词要保持人物和场景的统一性和一致性，提示词要中英文都有，可以用这些提示词生成重要分镜的图片，图片是中国古风卡通风格。输出格式为表格，第一列为分镜描述，第二列为中文图片提示词，第三列为英文AI绘画提示词。提示词要有图片尺寸比例要求：宽度 (Width): 1024，高度 (Height): 1024，长宽比 (Aspect Ratio): 1:1，demension 1024*1024"
+          "systemMessage": "=帮我根据视频分镜内容为每个重要的分镜生成图片提示词，提示词要保持人物和场景的统一性和一致性，提示词要中英文都有，可以用这些提示词生成重要分镜的图片，图片是中国古风卡通风格。输出格式为表格，第一列为分镜描述，第二列为中文图片提示词，第三列为英文AI绘画提示词。提示词要有图片尺寸比例要求：宽度 (Width): 1024，高度 (Height): 1024，长宽比 (Aspect Ratio): 1:1，definition 1024*1024"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -492,12 +492,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// 获取上一个节点的输出\nconst stdout = $input.first().json.stdout;\n\n// 获取文件夹名字\nconst folderName = $input.first().json.poemDir || $input.first().json['文件夹名字'];\n\n// 检查是否有输出\nif (!stdout || stdout.trim() === '') {\n  throw new Error(`在 /mnt/${folderName} 中没有找到图片文件`);\n}\n\n// 分割文件路径并过滤空行\nconst filePaths = stdout\n  .trim()\n  .split('\\n')\n  .filter(path => path && path.trim());\n\n// 检查是否找到文件\nif (filePaths.length === 0) {\n  throw new Error(`没有找到任何图片文件`);\n}\n\n// 构建图片对象数组\n// 将 /mnt/ 路径转换为 /app/n8n_shared/ 路径\nconst imageArray = filePaths.map(filePath => {\n  // 替换路径: /mnt/ -> /app/n8n_shared/\n  const apiPath = filePath.trim().replace('/mnt/', '/app/n8n_shared/');\n  \n  return {\n    provider: \"local\",\n    url: apiPath\n    // 移除了 duration 字段\n  };\n});\n\n// 转换为 JSON 字符串 (格式化输出,便于调试)\nconst imageListString = JSON.stringify(imageArray, null, 2);\n\n// 返回结果\nreturn [{\n  json: {\n    images: imageArray,              // 数组格式,用于 API 调用\n    imageListString: imageListString, // 字符串格式,用于查看\n    totalImages: imageArray.length,   // 图片总数\n    folderName: folderName            // 文件夹名字\n  }\n}];"
+        "jsCode": "// ✅ 从指定节点读取 stdout，避免被中间节点覆盖\nconst stdout = $node[\"Check All Resource Files\"].json.stdout;\n\n// ✅ 从表单节点读取 peomDir\nconst folderName =\n  $input.first().json.peomDir ||\n  $node[\"On form submission\"].json.peomDir ||\n  'unknown_folder';\n\n// ✅ 读取 duration 配置\nconst durationConfig = $input.first().json.durationConfig || {};\nconst defaultDuration = durationConfig.default || 5;\n\n// ✅ 检查 stdout\nif (!stdout || stdout.trim() === '') {\n  throw new Error(`在 /mnt/${folderName} 中没有找到图片文件`);\n}\n\n// ✅ 生成图片数组\nconst filePaths = stdout\n  .trim()\n  .split('\\n')\n  .filter(path => path && path.trim());\n\nconst imageArray = filePaths.map((filePath, index) => {\n  const apiPath = filePath.trim().replace('/mnt/', '/app/n8n_shared/');\n  const fileName = apiPath.split('/').pop();\n\n  let duration = defaultDuration;\n  if (durationConfig.byFileName && durationConfig.byFileName[fileName]) {\n    duration = durationConfig.byFileName[fileName];\n  } else if (durationConfig.byIndex && durationConfig.byIndex[index] !== undefined) {\n    duration = durationConfig.byIndex[index];\n  } else if (Array.isArray(durationConfig.durations) && durationConfig.durations[index] !== undefined) {\n    duration = durationConfig.durations[index];\n  }\n\n  return {\n    provider: \"local\",\n    url: apiPath,\n    duration,\n  };\n});\n\nreturn [{\n  json: {\n    images: imageArray,\n    imageListString: JSON.stringify(imageArray, null, 2),\n    totalImages: imageArray.length,\n    folderName,\n  },\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
+        1936,
         -32
       ],
       "id": "2b123f44-92d9-4f59-b218-3d88ced39264",
@@ -528,8 +528,8 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        3136,
-        224
+        3152,
+        336
       ],
       "id": "f57a18cd-4982-46dd-8bda-70c1b3ca0e48",
       "name": "Write Video to Local Directory"
@@ -548,8 +548,8 @@
       "type": "n8n-nodes-base.youTube",
       "typeVersion": 1,
       "position": [
-        3152,
-        448
+        3584,
+        816
       ],
       "id": "b7116103-2829-4354-a259-e42bbb2506ba",
       "name": "Upload a video",
@@ -557,26 +557,6 @@
         "youTubeOAuth2Api": {
           "id": "lRwCUwWMdvNh7nuF",
           "name": "YouTube account - talesteller"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        256,
-        -96
-      ],
-      "id": "f083f5d5-aaf5-4d4b-a4b4-54311389e1ef",
-      "name": "OpenRouter DeepSeek V3.1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
         }
       }
     },
@@ -603,11 +583,11 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        -624,
-        -112
+        144,
+        48
       ],
       "id": "4f960aa8-4ca6-4ec9-af7a-6e9d8601a0da",
-      "name": "OpenRouter DeepSeek V3.3",
+      "name": "OpenRouter DeepSeek V3.1",
       "credentials": {
         "openRouterApi": {
           "id": "IHQBibLs5j6lVuTK",
@@ -617,43 +597,139 @@
     },
     {
       "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
+        "name": "={{ $node['Create Sequence Number for File Name'].json.poemName }}.mp4",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1VtNfgLU9mPCdXTkoYIfsVQHfeDR1nwc4",
+          "mode": "list",
+          "cachedResultName": "Peom-Shorts-Check",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1VtNfgLU9mPCdXTkoYIfsVQHfeDR1nwc4"
+        },
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
       "position": [
-        704,
-        -96
+        3376,
+        336
       ],
-      "id": "c35865b4-2489-43ca-ac2a-72b141e15664",
-      "name": "OpenRouter DeepSeek V3.4",
+      "id": "43082053-72b2-4837-bfeb-e33836925c9b",
+      "name": "Upload To Google Drive ",
       "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
+        "googleDriveOAuth2Api": {
+          "id": "dv9cv6h0TrG0ry0Y",
+          "name": "Google Drive-talesteller"
         }
       }
     },
     {
       "parameters": {
-        "model": "deepseek/deepseek-chat-v3.1",
-        "options": {}
+        "operation": "sendAndWait",
+        "sendTo": "dreamriches25@gmail.com",
+        "subject": "Approval Required",
+        "message": "=检查下面链接中的短视频是否符合发布标准，然后点击Approval或Decline按钮。\n\n{{ $json.webContentLink }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 45,
+              "resumeUnit": "minutes"
+            }
+          }
+        }
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
       "position": [
-        -96,
-        -96
+        2880,
+        832
       ],
-      "id": "462092fb-3a52-4240-a982-07a6c7d49feb",
-      "name": "OpenRouter DeepSeek V3.",
+      "id": "8ac99905-7492-484a-9d78-0baece4b8fa1",
+      "name": "Send message and wait for response",
+      "webhookId": "c5cbdf8b-a58b-48b4-8e52-c03703144247",
       "credentials": {
-        "openRouterApi": {
-          "id": "IHQBibLs5j6lVuTK",
-          "name": "OpenRouter account"
+        "gmailOAuth2": {
+          "id": "n6Q2VV9boXdgifEL",
+          "name": "Gmail account-talesteller"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd2b2d21-adf7-4c94-a204-2ebdd4f27838",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3104,
+        832
+      ],
+      "id": "9e19baa7-992c-4cda-ba31-a09b8a52d882",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/mnt/{{ $node['On form submission'].json['文件夹'] }}/{{ $node['On form submission'].json['标题'] }}.mp4",
+        "options": {
+          "fileExtension": ".mp4",
+          "fileName": "={{ $node['On form submission'].json['标题'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        3376,
+        816
+      ],
+      "id": "2f285f67-3a68-4f9f-8369-14925c298a29",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"durationConfig\": {\n    \"default\": 2,\n    \"byIndex\": {\n      \"0\": 2,\n      \"5\": 1\n    }\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        -32
+      ],
+      "id": "31a4b40f-e37c-4e17-bac6-4dcb375d8e0c",
+      "name": "durationConfig"
     }
   ],
   "pinData": {
@@ -798,11 +874,6 @@
             "node": "Write Video to Local Directory",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Upload a video",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -897,7 +968,7 @@
       "main": [
         [
           {
-            "node": "Create Request Body",
+            "node": "durationConfig",
             "type": "main",
             "index": 0
           }
@@ -928,15 +999,10 @@
     },
     "Write Video to Local Directory": {
       "main": [
-        []
-      ]
-    },
-    "OpenRouter DeepSeek V3.1": {
-      "ai_languageModel": [
         [
           {
-            "node": "AI Generate Video Clips Prompt",
-            "type": "ai_languageModel",
+            "node": "Upload To Google Drive ",
+            "type": "main",
             "index": 0
           }
         ]
@@ -953,20 +1019,24 @@
         ]
       ]
     },
-    "OpenRouter DeepSeek V3.3": {
+    "OpenRouter DeepSeek V3.1": {
       "ai_languageModel": [
         [
           {
             "node": "PoemContent",
             "type": "ai_languageModel",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenRouter DeepSeek V3.4": {
-      "ai_languageModel": [
-        [
+          },
+          {
+            "node": "Generate Video Description",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Generate Video Clips Prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          },
           {
             "node": "AI Generate Images Prompts based on Video Clips",
             "type": "ai_languageModel",
@@ -975,12 +1045,57 @@
         ]
       ]
     },
-    "OpenRouter DeepSeek V3.": {
-      "ai_languageModel": [
+    "Upload To Google Drive ": {
+      "main": [
         [
           {
-            "node": "Generate Video Description",
-            "type": "ai_languageModel",
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "durationConfig": {
+      "main": [
+        [
+          {
+            "node": "Create Request Body",
+            "type": "main",
             "index": 0
           }
         ]
@@ -991,7 +1106,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "70f19c96-c0e4-4474-9b85-87c48b4e717c",
+  "versionId": "dbbc532e-0804-4d44-8e73-27f666e61a50",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
