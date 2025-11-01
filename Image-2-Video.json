@@ -1,0 +1,419 @@
+{
+  "name": "Image-2-Video",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "33e3dfb2-71df-4186-8372-75c18eba412c",
+              "leftValue": "={{ $json.data.progress}}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4880,
+        -992
+      ],
+      "id": "40da9906-316f-445d-bb1a-63da3a8a3968",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8080/api/v1/videos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_subject\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}\",\n  \"video_script\": \"{{ $node['On form submission'].json['请输入诗词标题'] }}，{{ $node['On form submission'].json['作者'] }}，{{$node['PoemContent'].json['output']}}\",\n  \"video_terms\": \"\",\n  \"video_aspect\": \"9:16\",\n  \"video_concat_mode\": \"sequential\",\n  \"video_transition_mode\": \"FadeIn\",\n  \"video_clip_duration\": 3,\n  \"video_count\": 1,\n  \"video_source\": \"local\",\n  \"video_materials\":{{ $json.imageListString }},\n  \"video_language\": \"zh\",\n  \"voice_name\": \"zh-CN-YunyangNeural-Male\",\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 0.7,\n  \"bgm_type\": \"random\",\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.2,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"STHeitiMedium.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3520,
+        -992
+      ],
+      "id": "7c8d0f96-ebc5-4cec-8352-fc5ce77ab0a0",
+      "name": "Call MoneyPrinterTurbo API "
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3904,
+        -992
+      ],
+      "id": "8f64e617-6fec-4d16-bbb5-a0105ff9ea1d",
+      "name": "Pause 10 Seconds",
+      "webhookId": "ddf55a55-a39e-41b3-9148-669b889ac3e6"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8080/api/v1/tasks/{{ $json.data.task_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4400,
+        -992
+      ],
+      "id": "0b1cf1f5-0853-4dfe-b98d-90b7814f16b4",
+      "name": "Check Job Status and Progress"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.videos[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5200,
+        -1008
+      ],
+      "id": "9bea0a11-c0d7-462e-83a4-5adb87e24f67",
+      "name": "Download the Video"
+    },
+    {
+      "parameters": {
+        "command": "=find /mnt/{{ $node['On form submission'].json.peomDir }} -maxdepth 1 -type f \\( -iname \"*.png\" -o -iname \"*.jpg\" -o -iname \"*.jpeg\" -o -iname \"*.gif\" -o -iname \"*.webp\" \\) | sort -V"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        2656,
+        -992
+      ],
+      "id": "fe2bfe57-f7cf-4c29-bf7e-e6d06ac6b6bd",
+      "name": "Check All Resource Files"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ 从指定节点读取 stdout，避免被中间节点覆盖\nconst stdout = $node[\"Check All Resource Files\"].json.stdout;\n\n// ✅ 从表单节点读取 peomDir\nconst folderName =\n  $input.first().json.peomDir ||\n  $node[\"On form submission\"].json.peomDir ||\n  'unknown_folder';\n\n// ✅ 读取 duration 配置\nconst durationConfig = $input.first().json.durationConfig || {};\nconst defaultDuration = durationConfig.default || 5;\n\n// ✅ 检查 stdout\nif (!stdout || stdout.trim() === '') {\n  throw new Error(`在 /mnt/${folderName} 中没有找到图片文件`);\n}\n\n// ✅ 生成图片数组\nconst filePaths = stdout\n  .trim()\n  .split('\\n')\n  .filter(path => path && path.trim());\n\nconst imageArray = filePaths.map((filePath, index) => {\n  const apiPath = filePath.trim().replace('/mnt/', '/app/n8n_shared/');\n  const fileName = apiPath.split('/').pop();\n\n  let duration = defaultDuration;\n  if (durationConfig.byFileName && durationConfig.byFileName[fileName]) {\n    duration = durationConfig.byFileName[fileName];\n  } else if (durationConfig.byIndex && durationConfig.byIndex[index] !== undefined) {\n    duration = durationConfig.byIndex[index];\n  } else if (Array.isArray(durationConfig.durations) && durationConfig.durations[index] !== undefined) {\n    duration = durationConfig.durations[index];\n  }\n\n  return {\n    provider: \"local\",\n    url: apiPath,\n    duration,\n  };\n});\n\nreturn [{\n  json: {\n    images: imageArray,\n    imageListString: JSON.stringify(imageArray, null, 2),\n    totalImages: imageArray.length,\n    folderName,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3216,
+        -992
+      ],
+      "id": "6b2f984e-2d8a-4c69-a41e-122e79d9de80",
+      "name": "Create Request Body"
+    },
+    {
+      "parameters": {
+        "formTitle": "Peom Directory",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "peomDir"
+            },
+            {
+              "fieldLabel": "请输入诗词标题"
+            },
+            {
+              "fieldLabel": "作者"
+            },
+            {
+              "fieldLabel": "首句"
+            },
+            {
+              "fieldLabel": "类型",
+              "placeholder": "唐诗"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        2080,
+        -992
+      ],
+      "id": "32b3aa5f-ff76-4461-af71-29a0f2b4c387",
+      "name": "On form submission",
+      "webhookId": "cdba4874-ebbc-4718-9d48-6f7364110a32"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=输出{{ $json['作者'] }}的{{ $json['类型'] }}{{ $json['请输入诗词标题'] }} （{{ $json['首句'] }}）的原文内容，只要原文就好，不需要输出标题，不要换行，只输出一个字符串，但要有标点符号",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        -992
+      ],
+      "id": "2f7fd6c7-556f-42c4-837d-c3baf572cd02",
+      "name": "PoemContent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        -784
+      ],
+      "id": "8672073b-d441-4c3e-b47a-303b3186a931",
+      "name": "OpenRouter DeepSeek V3.3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 图片生成视频子工作流\n用于将图片素材收集整理生成短视频的工作流\n\n*PeomDir = {标题汉语拼音}",
+        "height": 192,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        -1360
+      ],
+      "typeVersion": 1,
+      "id": "c4c6f4d0-cda0-4ad7-8100-9dca5aff5531",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/mnt/{{ $node['On form submission'].json.peomDir }}/{{ $node['On form submission'].json['请输入诗词标题'] }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        5536,
+        -1008
+      ],
+      "id": "82c492d1-4e27-425d-bfec-ab88d2a7cfd1",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"durationConfig\": {\n    \"default\": 2,\n    \"byIndex\": {\n      \"0\": 2,\n      \"5\": 1\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        -992
+      ],
+      "id": "ef7ab411-7b04-4641-b058-40117de52111",
+      "name": "durationConfig"
+    }
+  ],
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "peomDir": "guogurenzhuang",
+          "请输入诗词标题": "过故人庄",
+          "作者": "孟浩然",
+          "首句": "",
+          "类型": "",
+          "submittedAt": "2025-11-01T01:09:30.014-04:00",
+          "formMode": "test"
+        }
+      }
+    ],
+    "PoemContent": [
+      {
+        "json": {
+          "output": "故人具鸡黍，邀我至田家。绿树村边合，青山郭外斜。开轩面场圃，把酒话桑麻。待到重阳日，还来就菊花。"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Download the Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pause 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call MoneyPrinterTurbo API ": {
+      "main": [
+        [
+          {
+            "node": "Pause 10 Seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pause 10 Seconds": {
+      "main": [
+        [
+          {
+            "node": "Check Job Status and Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Job Status and Progress": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check All Resource Files": {
+      "main": [
+        [
+          {
+            "node": "durationConfig",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "PoemContent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Request Body": {
+      "main": [
+        [
+          {
+            "node": "Call MoneyPrinterTurbo API ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter DeepSeek V3.3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PoemContent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PoemContent": {
+      "main": [
+        [
+          {
+            "node": "Check All Resource Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download the Video": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        []
+      ]
+    },
+    "durationConfig": {
+      "main": [
+        [
+          {
+            "node": "Create Request Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d3a8d581-865d-426d-ba0d-6eec371e8f25",
+  "meta": {
+    "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
+  },
+  "id": "yptbbTZ2nRRSscOt",
+  "tags": [
+    {
+      "createdAt": "2025-10-27T02:28:13.541Z",
+      "updatedAt": "2025-10-27T02:28:13.541Z",
+      "id": "lYizxYegxck8DBWd",
+      "name": "Sub Workflow"
+    },
+    {
+      "createdAt": "2025-09-17T01:57:18.923Z",
+      "updatedAt": "2025-09-17T01:57:18.923Z",
+      "id": "wR8hVMoBk4XU9tHi",
+      "name": "Backend Service"
+    }
+  ]
+}

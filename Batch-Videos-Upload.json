@@ -1,0 +1,196 @@
+{
+  "name": "Batch Videos Upload",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 短视频批量上传油管\n* 创建一个上传专用文件夹来保存所有待上传的视频文件 (用表单出发节点测试）\n* AI节点创作视频描述\n* 用HTTP节点下载视频binary file\n* Youtube节点上传视频",
+        "height": 208,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -336,
+        -224
+      ],
+      "typeVersion": 1,
+      "id": "91a01faf-3f12-4cf8-96e2-6bc28adbea65",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload Video Files",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "标题"
+            },
+            {
+              "fieldLabel": "作者"
+            },
+            {
+              "fieldLabel": "类型",
+              "placeholder": "唐诗"
+            },
+            {
+              "fieldLabel": "首句"
+            },
+            {
+              "fieldLabel": "文件夹"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -432,
+        176
+      ],
+      "id": "b7452f76-8979-4c3c-94da-2b2d8df58b27",
+      "name": "On form submission",
+      "webhookId": "de416032-137e-4abf-a666-cbbdf664e2e1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=简要介绍一下这首{{ $node['On form submission'].json['作者'] }}的{{ $node['On form submission'].json['标题'] }} ({{ $node['On form submission'].json['首句'] }})，作为YouTube短视频的description描述",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        176
+      ],
+      "id": "7ab45d6b-b60b-4359-af6c-7fc572319f87",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        368
+      ],
+      "id": "262cb848-39e6-46b5-8ac5-773382e2b81a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "IHQBibLs5j6lVuTK",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $node['On form submission'].json['标题'] }}",
+        "regionCode": "CA",
+        "categoryId": "24",
+        "options": {
+          "description": "={{ $node['AI Agent'].json.output }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        656,
+        176
+      ],
+      "id": "ec9e220e-c95c-4380-b913-ea98478918be",
+      "name": "Upload a video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "lRwCUwWMdvNh7nuF",
+          "name": "YouTube account - talesteller"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/mnt/{{ $node['On form submission'].json['文件夹'] }}/{{ $node['On form submission'].json['标题'] }}.mp4",
+        "options": {
+          "fileExtension": ".mp4",
+          "fileName": "={{ $node['On form submission'].json['标题'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        320,
+        176
+      ],
+      "id": "ace21d72-c416-4cba-9f4f-8fdf52e937be",
+      "name": "Read/Write Files from Disk"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        []
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b7b37b5f-8b59-46e2-a9dd-e5077fd79f6b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ddac341991085351e928d1e255bf1a309fc39806f32adb9626dd27268ae885da"
+  },
+  "id": "OaOOQlFQX1HY2WdZ",
+  "tags": []
+}
